@@ -1,0 +1,74 @@
+#+TITLE: Day 3, Part 2
+
+#+begin_src jq :in-file d3test.txt :cmd-line -nR
+
+# again, stolen
+230 as $answer |
+def to_i(base): explode | reverse | map(if . > 96  then . - 87 else . - 48 end) | reduce .[] as $c ([1,0]; (.[0] * base) as $b | [$b, .[1] + (.[0] * $c)]) | .[1];
+def flip_bit(b): if b == "0" then "1" else "0" end;
+def find_and_filter_oxygen:
+  .[0:-2] as $orig
+  | .[-2] as $pos
+  | .[-1] as $tiebreaker
+  | ($orig[0] | length) as $l1
+  | $orig | transpose
+  | (.[0] | length) as $l2
+  | .[$pos] as $p
+  | (if ($p | map(select(. == $tiebreaker)) | length) >= ($l2/2) then $tiebreaker else flip_bit($tiebreaker) end) as $selector
+  | $orig
+  | map(select(.[$pos] == $selector)) | [.[], (($pos+1) % $l1), $tiebreaker];
+def find_and_filter_co2:
+  .[0:-2] as $orig
+  | .[-2] as $pos
+  | .[-1] as $tiebreaker
+  | ($orig[0] | length) as $l1
+  | $orig | transpose
+  | (.[0] | length) as $l2
+  | .[$pos] as $p
+  | (if ($p | map(select(. == $tiebreaker)) | length) <= ($l2/2) then $tiebreaker else flip_bit($tiebreaker) end) as $selector
+  | $orig
+  | map(select(.[$pos] == $selector)) | [.[], (($pos+1) % $l1), $tiebreaker];
+  [inputs | split("")] as $i | $i | [.[], 0, "1"]
+  | until((. | length) < 4; find_and_filter_oxygen) | .[0] | join("") | to_i(2) as $oxygen
+  | $i | [.[], 0, "0"]
+  | until((. | length) < 4; find_and_filter_co2) | .[0] | join("") | to_i(2) as $co2
+  | $oxygen * $co2 == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src jq :in-file d3input.txt :cmd-line -Rn
+def to_i(base): explode | reverse | map(if . > 96  then . - 87 else . - 48 end) | reduce .[] as $c ([1,0]; (.[0] * base) as $b | [$b, .[1] + (.[0] * $c)]) | .[1];
+def flip_bit(b): if b == "0" then "1" else "0" end;
+def find_and_filter_oxygen:
+  .[0:-2] as $orig
+  | .[-2] as $pos
+  | .[-1] as $tiebreaker
+  | ($orig[0] | length) as $l1
+  | $orig | transpose
+  | (.[0] | length) as $l2
+  | .[$pos] as $p
+  | (if ($p | map(select(. == $tiebreaker)) | length) >= ($l2/2) then $tiebreaker else flip_bit($tiebreaker) end) as $selector
+  | $orig
+  | map(select(.[$pos] == $selector)) | [.[], (($pos+1) % $l1), $tiebreaker];
+def find_and_filter_co2:
+  .[0:-2] as $orig
+  | .[-2] as $pos
+  | .[-1] as $tiebreaker
+  | ($orig[0] | length) as $l1
+  | $orig | transpose
+  | (.[0] | length) as $l2
+  | .[$pos] as $p
+  | (if ($p | map(select(. == $tiebreaker)) | length) <= ($l2/2) then $tiebreaker else flip_bit($tiebreaker) end) as $selector
+  | $orig
+  | map(select(.[$pos] == $selector)) | [.[], (($pos+1) % $l1), $tiebreaker];
+  [inputs | split("")] as $i | $i | [.[], 0, "1"]
+  | until((. | length) < 4; find_and_filter_oxygen) | .[0] | join("") | to_i(2) as $oxygen
+  | $i | [.[], 0, "0"]
+  | until((. | length) < 4; find_and_filter_co2) | .[0] | join("") | to_i(2) as $co2
+  | $oxygen * $co2
+#+end_src
+
+#+RESULTS:
+: 4203981

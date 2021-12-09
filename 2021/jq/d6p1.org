@@ -1,0 +1,26 @@
+#+TITLE: Day 6, Part 1
+
+#+begin_src jq :in-file d6test.txt :cmd-line -nR
+5934 as $answer |
+  def run:
+    .[1] as $day |
+    [.[0] | map(if . == 0 then 7 else . end | .-1)
+               + ([range(map(select(. == 0)) | length)] | map(8)), $day-1]
+;
+inputs/"," | map(tonumber) | [., 80] | until(.[1] == 0; run) | .[0] | length == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src jq :in-file d6input.txt :cmd-line -nR
+def run:
+  .[1] as $day |
+  [.[0] | map(if . == 0 then 7 else . end | .-1)
+             + ([range(map(select(. == 0)) | length)] | map(8)), $day-1]
+;
+inputs/"," | map(tonumber) | [., 80] | until(.[1] == 0; run) | .[0] | length
+#+end_src
+
+#+RESULTS:
+: 355386

@@ -1,0 +1,22 @@
+#+TITLE: Day 5, Part 1
+
+#+begin_src jq :in-file d5test.txt :cmd-line -nR
+5 as $answer |
+[ inputs/" -> " | map(split(",") | map(tonumber)) ]
+  | map(select(.[0][0] == .[1][0] or .[0][1] == .[1][1]))
+  | map(transpose | [[range(.[0] | min; .[0] | max + 1)], [range(.[1] | min; .[1] | max + 1)] ] | [combinations])
+  | flatten(1) | group_by(.) | map(select(length > 1)) | flatten(1) | unique | length == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src jq :in-file d5input.txt :cmd-line -nR
+[ inputs/" -> " | map(split(",") | map(tonumber)) ]
+  | map(select(.[0][0] == .[1][0] or .[0][1] == .[1][1]))
+  | map(transpose | [[range(.[0] | min; .[0] | max + 1)], [range(.[1] | min; .[1] | max + 1)] ] | [combinations])
+  | flatten(1) | group_by(.) | map(select(length > 1)) | flatten(1) | unique | length
+#+end_src
+
+#+RESULTS:
+: 6548

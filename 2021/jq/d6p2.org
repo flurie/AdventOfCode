@@ -1,0 +1,18 @@
+#+TITLE: Day6
+
+#todo generate the mappings in code and use there
+#+begin_src jq :in-file d6input.txt :cmd-line -nR
+{"0": 94508, "1": 90763, "2": 79321, "3": 75638, "4": 67616, "5": 62475, "6": 58016, "7": 51564, "8": 49380} as $map128 |
+{"1": 6206821033, "2": 5617089148, "3": 5217223242, "4": 4726100874, "5": 4368232009} as $map256 |
+def run:
+  .[1] as $day |
+  [.[0] | map(if . == 0 then 7 else . end | .-1) + ([range(map(select(. == 0)) | length)] | map(8)), $day-1]
+;
+inputs/","
+| map($map256[.]) | add
+# inputs/"," | map(tonumber) | 128 as $days |  |
+# [., $days] | until(.[1] == 0; run) | .[0] | map($map128[. | tostring]) | add
+#+end_src
+
+#+RESULTS:
+: 1613415325809

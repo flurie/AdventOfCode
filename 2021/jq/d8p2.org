@@ -1,0 +1,101 @@
+#+TITLE: Day 8, Part 2
+
+#+begin_example
+ 0:      1:      2:      3:      4:
+ aaaa    ....    aaaa    aaaa    ....
+b    c  .    c  .    c  .    c  b    c
+b    c  .    c  .    c  .    c  b    c
+ ....    ....    dddd    dddd    dddd
+e    f  .    f  e    .  .    f  .    f
+e    f  .    f  e    .  .    f  .    f
+ gggg    ....    gggg    gggg    ....
+
+  5:      6:      7:      8:      9:
+ aaaa    aaaa    aaaa    aaaa    aaaa
+b    .  b    .  .    c  b    c  b    c
+b    .  b    .  .    c  b    c  b    c
+ dddd    dddd    ....    dddd    dddd
+.    f  e    f  .    f  e    f  .    f
+.    f  e    f  .    f  e    f  .    f
+ gggg    gggg    ....    gggg    gggg
+
+ #0: abcefg
+ #1: cf
+ #2: acdeg
+ #3: acdfg
+ #4: bcdf
+ #5: abdfg
+ #6: abdefg
+ #7: acf
+ #8: abcdefg
+ #9: abcdfg
+
+ 4 crossover
+ 9: bcdf + ag (4 match, 6 total) -> #1
+
+ 7 crossover
+ 0: acf + beg (3 match 7, 6 total) -> #2
+ 3: acf + dg (3 match 7, 5 total) -> #2
+ 9: acf + bdg
+
+ 9 crossover
+ 5: abdfg (+ c) (all 5 match) -> #3
+
+ 5 crossover
+ 6: abdfg (+ e) (all 5 match) -> #4
+
+ 2: solved by process of elimination
+#+end_example
+
+#+begin_src jq :in-file d8test.txt :cmd-line -nR
+def find_values:
+  map(select(length == 2))[] as $one
+  | map(select(length == 3))[] as $seven
+  | map(select(length == 4))[] as $four
+  | map(select(length == 7))[] as $eight
+  | . - [$one, $four, $seven, $eight]
+  | map(select(length == 6 and contains($four)))[] as $nine
+  | . - [$nine]
+  | map(select(length == 5 and contains($seven)))[] as $three
+  | map(select(length == 6 and contains($seven)))[] as $zero
+  | . - [$three, $zero]
+  | map(select(length == 5 and inside($nine)))[] as $five
+  | map(select(length == 6 and contains($five)))[] as $six
+  | (. - [$five, $six])[] as $two
+  | {($zero | sort | join("")): "0", ($one | sort | join("")): "1", ($two | sort | join("")): "2", ($three | sort | join("")): "3", ($four | sort | join("")): "4", ($five | sort | join("")): "5", ($six | sort | join("")): "6", ($seven | sort | join("")): "7", ($eight | sort | join("")): "8", ($nine | sort | join("")): "9"}
+;
+[inputs/" | " | . as [$decode, $value]
+  | $decode | split(" ") | map(split("")) | find_values as $v
+  | ($value | split(" ") | map(split("") | sort | join(""))) | map($v[.]) | join("")]
+  | map(tonumber) | add
+#+end_src
+
+#+RESULTS:
+: 61229
+
+
+#+begin_src jq :in-file d8input.txt :cmd-line -nR
+def find_values:
+  map(select(length == 2))[] as $one
+  | map(select(length == 3))[] as $seven
+  | map(select(length == 4))[] as $four
+  | map(select(length == 7))[] as $eight
+  | . - [$one, $four, $seven, $eight]
+  | map(select(length == 6 and contains($four)))[] as $nine
+  | . - [$nine]
+  | map(select(length == 5 and contains($seven)))[] as $three
+  | map(select(length == 6 and contains($seven)))[] as $zero
+  | . - [$three, $zero]
+  | map(select(length == 5 and inside($nine)))[] as $five
+  | map(select(length == 6 and contains($five)))[] as $six
+  | (. - [$five, $six])[] as $two
+  | {($zero | sort | join("")): "0", ($one | sort | join("")): "1", ($two | sort | join("")): "2", ($three | sort | join("")): "3", ($four | sort | join("")): "4", ($five | sort | join("")): "5", ($six | sort | join("")): "6", ($seven | sort | join("")): "7", ($eight | sort | join("")): "8", ($nine | sort | join("")): "9"}
+;
+[inputs/" | " | . as [$decode, $value]
+  | $decode | split(" ") | map(split("")) | find_values as $v
+  | ($value | split(" ") | map(split("") | sort | join(""))) | map($v[.]) | join("")]
+  | map(tonumber) | add
+#+end_src
+
+#+RESULTS:
+: 1027483

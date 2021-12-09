@@ -1,0 +1,17 @@
+#+TITLE: Day 7, Part 1
+
+#+begin_src jq :in-file d7test.txt :cmd-line -nR
+37 as $answer |
+input/"," | map(tonumber) as $i | $i | [range(min; max+1) as $r | $i | map(.-$r | fabs) | add] | min == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+
+#+begin_src jq :in-file d7input.txt :cmd-line -nR
+input/"," | map(tonumber) as $i | $i | [range(min; max+1) as $r | $i | map(.-$r | fabs) | add] | min
+#+end_src
+
+#+RESULTS:
+: 355521

@@ -1,0 +1,23 @@
+#+TITLE: Day 1, Part 1
+
+#+begin_src jq :in-file d1test.txt :cmd-line -n
+7 as $answer |
+[inputs] as $i |
+  [ range(0; $i | length)
+    | select ($i[.] < $i[.+1]) ]
+  | length == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+
+#+begin_src jq :in-file d1input.txt :cmd-line -n
+[inputs] as $i |
+  [ range(0; $i | length)
+    | select ($i[.] < $i[.+1]) ]
+  | length
+#+end_src
+
+#+RESULTS:
+: 1154

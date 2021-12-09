@@ -1,0 +1,36 @@
+#+TITLE: Day 2, Part 1
+
+#+begin_src jq :in-file d2test.txt :cmd-line -nR
+150 as $answer |
+[inputs | split(" ")] | map([first, (last | tonumber)])
+  | reduce .[] as $i ([0, 0];
+                      if $i | first == "forward"
+                      then [first + ($i | last), last]
+                      elif $i | first == "down"
+                      then [first, ($i | last) + last]
+                      elif $i | first == "up"
+                      then [first, last - ($i | last)]
+                      else empty
+                           end)
+  | first * last == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src jq :in-file d2input.txt :cmd-line -nR
+[inputs | split(" ")] | map([first, (last | tonumber)])
+  | reduce .[] as $i ([0, 0];
+                      if $i | first == "forward"
+                      then [first + ($i | last), last]
+                      elif $i | first == "down"
+                      then [first, ($i | last) + last]
+                      elif $i | first == "up"
+                      then [first, last - ($i | last)]
+                      else empty
+                           end)
+  | first * last
+#+end_src
+
+#+RESULTS:
+: 1648020

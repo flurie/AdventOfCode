@@ -1,0 +1,23 @@
+#+TITLE: Day 7, Part 2
+
+#+begin_src jq :in-file d7test.txt :cmd-line -nR
+168 as $answer |
+input/"," | map(tonumber) as $i
+  | $i | [range(min; max+1) as $r
+           | map(.-$r | fabs | [range(0;.+1)] | add) | add]
+  | min == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+#todo consider better approaches than brute (which took ~5 min in jq master on one M1 Pro core)
+#+begin_src jq :in-file d7input.txt :cmd-line -nR
+input/"," | map(tonumber) as $i
+  | $i | [range(min; max+1) as $r
+           | map(.-$r | fabs | [range(0;.+1)] | add) | add]
+  | min
+#+end_src
+
+#+RESULTS:
+: 100148777

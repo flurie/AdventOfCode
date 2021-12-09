@@ -1,0 +1,29 @@
+#+TITLE: Day 1, Part 2
+
+
+#+begin_src jq :in-file d1test.txt :cmd-line -n
+5 as $answer |
+  [inputs] as $i
+  | [range(2; $i | length)
+      | [$i[.] + $i[.-1] + $i[.-2]]]
+  | add as $j
+  | [range(1; $j | length)
+      | select($j[.] > $j[.-1])]
+  | length == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src jq :in-file d1input.txt :cmd-line -n
+[inputs] as $i
+  | [range(2; $i | length)
+      | [$i[.] + $i[.-1] + $i[.-2]]]
+  | add as $j
+  | [range(1; $j | length)
+      | select($j[.] > $j[.-1])]
+  | length
+#+end_src
+
+#+RESULTS:
+: 1127

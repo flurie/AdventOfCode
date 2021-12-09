@@ -1,0 +1,6 @@
+#+TITLE: Day 4, Part 2
+
+#TODO this was far too messy for the public, clean it up
+#+begin_src jq :in-file d4input.txt :cmd-line -nR
+
+#+end_src

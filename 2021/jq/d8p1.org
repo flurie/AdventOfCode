@@ -1,0 +1,20 @@
+#+TITLE: Day 8, Part 1
+
+#+begin_src jq :in-file d8test.txt :cmd-line -nR
+26 as $answer |
+  [inputs/" | " | last | split(" ") |
+    map(. as $i | if ([2,3,4,7] | contains([$i | length])) then 1 else 0 end)]
+  | flatten | add == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src jq :in-file d8input.txt :cmd-line -nR
+[inputs/" | " | last | split(" ")
+  | map(. as $i | if ([2,3,4,7] | contains([$i | length])) then 1 else 0 end)]
+  | flatten | add
+#+end_src
+
+#+RESULTS:
+: 519

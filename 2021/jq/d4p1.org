@@ -1,0 +1,197 @@
+#+TITLE: Day 4, Part 1
+
+#TODO clean this up
+#+begin_src jq :in-file d4input.txt :cmd-line -nR
+[inputs | split("\n") ] as $input
+  | $input[0][] | split(",") as $bingo
+  | $input[2:] as $cards
+  | [range(1; $cards | length / 5)] as $l
+  | $cards
+  | [map(select(. | length > 0))[][] | ltrimstr(" ") | rtrimstr(" ") | split(" +"; "")] as $formattedCards
+  | $l | map($formattedCards[(.-1)*5:.*5]) | map(. + transpose) | flatten(1) as $bingos
+  | [range(0; $bingo | length)] as $r | $bingos | map(select(. - $bingo[0:66] | length == 0)) - map(select(. - $bingo[0:65] | length == 0))
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[
+  [
+    "50",
+    "42",
+    "10",
+    "89",
+    "88"
+  ],
+  [
+    "6",
+    "42",
+    "89",
+    "50",
+    "36"
+  ],
+  [
+    "35",
+    "47",
+    "28",
+    "0",
+    "50"
+  ],
+  [
+    "47",
+    "61",
+    "14",
+    "69",
+    "50"
+  ],
+  [
+    "11",
+    "50",
+    "58",
+    "29",
+    "53"
+  ],
+  [
+    "50",
+    "37",
+    "47",
+    "13",
+    "83"
+  ],
+  [
+    "37",
+    "11",
+    "50",
+    "56",
+    "88"
+  ],
+  [
+    "16",
+    "41",
+    "28",
+    "33",
+    "50"
+  ],
+  [
+    "21",
+    "30",
+    "44",
+    "50",
+    "40"
+  ],
+  [
+    "12",
+    "27",
+    "50",
+    "60",
+    "36"
+  ]
+]
+#+end_example
+
+#+begin_src emacs-lisp
+(* 48(+
+  63
+  3
+  22
+  7
+  10
+  76
+  77
+  38
+  31
+  75
+  74
+  78
+  86
+  64
+  71
+  90
+  67
+))
+#+end_src
+
+#+RESULTS:
+: 44736
+
+#+begin_src jq :in-file d4input.txt :cmd-line -nR
+[inputs] as $i | ($i | length) as $l
+  | [range(1; $l; 6)] | map($i[.+1:.+6]) | map(map([scan("\\d{1,2}")])) | map(. + transpose) as $cards
+  | $cards
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[
+  [
+    "7",
+    "42",
+    "22",
+    "92",
+    "60"
+  ],
+  [
+    "8",
+    "88",
+    "99",
+    "13",
+    "12"
+  ],
+  [
+    "16",
+    "62",
+    "86",
+    "24",
+    "77"
+  ],
+  [
+    "20",
+    "57",
+    "19",
+    "67",
+    "46"
+  ],
+  [
+    "36",
+    "83",
+    "54",
+    "63",
+    "82"
+  ],
+  [
+    "7",
+    "8",
+    "16",
+    "20",
+    "36"
+  ],
+  [
+    "42",
+    "88",
+    "62",
+    "57",
+    "83"
+  ],
+  [
+    "22",
+    "99",
+    "86",
+    "19",
+    "54"
+  ],
+  [
+    "92",
+    "13",
+    "24",
+    "67",
+    "63"
+  ],
+  [
+    "60",
+    "12",
+    "77",
+    "46",
+    "82"
+  ]
+]
+#+end_example
