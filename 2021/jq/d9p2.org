@@ -1,0 +1,49 @@
+#+TITLE: Day 9, Part 2
+
+Working out how to turn array of [coord, .. neighbors] into map of {x: y: [neighbors]}
+
+#+begin_src jq :cmd-line -nR
+[[1, 1], [1, 2], [1, 3]] | {(first | first | tostring): {(first | last | tostring): .[1:]}}
+#+end_src
+
+Then these can get recursive merge (~*~)
+
+Trying to pull coords out of original algo now to use as starting points for basin traversal
+
+I got this, but the visible sol'n is work in progress...
+
+#+begin_src jq :in-file d9test.txt :cmd-line -nR
+def neighbors:
+last as [$maxX, $maxY] | map(
+                             if first == 0 then [[first, last], [first+1, last]]
+                             elif first == $maxX then [[first, last], [first-1, last]]
+                             else [[first, last], [first-1, last], [first+1, last]]
+                                    end
+                             +
+                             if last == 0 then [[first, last+1]]
+                             elif last == $maxY then [[first, last-1]]
+                             else [[first, last-1], [first, last+1]]
+                                    end
+                           )
+;
+
+def get_basins($b):
+  [[.], []] as $i | $i
+  | while((first | length) > 0;
+          (first | first) as $n | if $b[($n | first)][($n | last)] != "9" and ($n | inside($i | last) | not) then ($i | [(first | .[1:]
+                                                                # + if ($n | first) > 0 then [($n | first) - 1, ($n | last)] else [] end
+                                                                #   + if ($n | first) < ($b | length) - 1 then [($n | first) + 1, ($n | last)] else [] end
+                                                                #     + if ($n | last) > 0 then [($n | first), ($n | last) - 1] else [] end
+                                                                #       + if ($n | last) < ($b[0] | length) - 1 then [($n | first), ($n | last) + 1] else [] end), last + $n]
+                               ) else ($i | [first | .[1:], last]) end)
+;
+
+[inputs | split("")] as $x | $x | transpose as $y | [range(0;$x | first | length)] as $i | [range(0;$y | first | length)] as $j | [$i, $j] | [combinations] | neighbors |
+  map([first, map($y[first][last])]) | map(select((last | first) == (last | min))) | map(first)
+ | first | get_basins($x)
+
+#+end_src
+
+#+RESULTS
+#+RESULTS:
+: 1134

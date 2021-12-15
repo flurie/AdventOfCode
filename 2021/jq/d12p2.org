@@ -1,0 +1,45 @@
+#+TITLE: Day 12, Part 2
+
+Note: the depth-first search was about an order of magnitude faster than the breadth-first search.
+
+Another optimization that may have been unnecessary but seemed so is that I stopped carrying over completed paths and instead added them to a tally. This also meant I got an accurate count at the end rather than having to under-count as in Part 1.
+
+#+begin_src jq :cmd-line -nR :in-file d12input.txt
+[inputs/"-"] as $paths
+  | [[["start"]], 0]
+  | [recurse(
+         . as [$dirs, $sum] | $dirs
+         | map(select(last != "end")) | first as $dir
+         | $dir | last as $pos
+         | if map(select(. == ascii_downcase)) | [group_by(.)[] | select(length == 2)] | length > 0 then map(select(. == ascii_downcase)) + [$pos, "start"] else [$pos, "start"] end | unique as $traveled
+         | [$paths[] | select(index($pos))] | flatten | (unique - $traveled) as $newdirs | $newdirs - ["end"]
+         | [(map($dir + [.]) + [$dirs[] | select(. != ($dir))]), $sum + ([$newdirs[] | index("end") // empty] | length)];
+(first | length) != 0)] | last | last
+
+#+end_src
+
+#+RESULTS:
+: 147848
+
+Had some scratch work here for various things
+
+#+begin_src jq :cmd-line -nR :in-file d12test.txt
+#[inputs/"-"] | .[] | last | select(. != "end")
+#[["start"], ["start", "end"], ["start", "last | select(. != "end")]
+# ["foo"] as $a | [["foo"], ["bar"]] as $b | []
+# | [$b[] | select(. != $a)] + map($a + [.])
+#["a", "b", "c"] | [.[] | index(ascii_upcase)]
+#["b", "a", "c"] | [group_by(.)[] | select(length == 2)] | length > 1
+# 5 as $n | [reduce range(0; $n) as $i ([]; . + [[range(0;$n)]]) | combinations | select(unique | length == $n)]
+#+end_src
+
+#+RESULTS:
+: [
+:   [
+:     1,
+:     2
+:   ]
+: ]
+: [
+:   3
+: ]

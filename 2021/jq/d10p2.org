@@ -1,0 +1,49 @@
+#+TITLE: Day 10, Part 2
+
+#+begin_src jq :cmd-line -nR :in-file d10test.txt
+{ "(": ")", "{": "}", "[": "]", "<": ">" } as $delim
+| { ")": 1, "]": 2, "}": 3, ">": 4 } as $points
+| [inputs/""
+| [. + ["."], []]
+| [recurse(
+      . as [$i, $stack]
+           | $i | [first]
+           | if inside([$delim[]]) then
+               if (.[]) == $delim[$stack | first] then
+                 [$i[1:], $stack[1:]]
+               else
+                 [$i[1:], $stack[1:] + .]
+               end
+             else
+               [$i[1:], . + $stack]
+             end
+          ; (first | length) > 0)] | last | last | select(map(select(inside($delim[]))) | length == 0) | map($delim[.]) | reduce .[] as $s (0; (.*5)+$points[$s])] | sort | .[length / 2 | floor]
+
+#+end_src
+
+#+RESULTS:
+: 288957
+
+#+begin_src jq :cmd-line -nR :in-file d10input.txt
+{ "(": ")", "{": "}", "[": "]", "<": ">" } as $delim
+| { ")": 1, "]": 2, "}": 3, ">": 4 } as $points
+| [inputs/""
+| [. + ["."], []]
+| [recurse(
+      . as [$i, $stack]
+           | $i | [first]
+           | if inside([$delim[]]) then
+               if (.[]) == $delim[$stack | first] then
+                 [$i[1:], $stack[1:]]
+               else
+                 [$i[1:], $stack[1:] + .]
+               end
+             else
+               [$i[1:], . + $stack]
+             end
+          ; (first | length) > 0)] | last | last | select(map(select(inside($delim[]))) | length == 0) | map($delim[.]) | reduce .[] as $s (0; (.*5)+$points[$s])] | sort | .[length / 2 | floor]
+
+#+end_src
+
+#+RESULTS:
+: 3999363569

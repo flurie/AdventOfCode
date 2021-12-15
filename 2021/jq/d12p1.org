@@ -1,0 +1,27 @@
+#+TITLE: Day 12, Part 1
+
+#+begin_src jq :cmd-line -nRc :in-file d12input.txt
+[inputs/"-"] as $paths
+  | [["start"]]
+  | [recurse(
+          . as $dirs
+           | map(select(last != "end")) | first as $dir
+           | $dir | last as $pos
+           | [$paths[] | select(index($pos))] | flatten | unique - ($dir | map(select(. == ascii_downcase or . == $pos)))
+           | [$dirs[] | select(. != ($dir))] + map($dir + [.]);
+  (map(select(last == "end")) | length) < length)] | last | length - 1
+
+#+end_src
+
+#+RESULTS:
+: 4720
+
+#+begin_src jq :cmd-line -nR :in-file d12test.txt
+#[inputs/"-"] | .[] | last | select(. != "end")
+#[["start"], ["start", "end"], ["start", "last | select(. != "end")]
+# ["foo"] as $a | [["foo"], ["bar"]] as $b | []
+# | [$b[] | select(. != $a)] + map($a + [.])
+["a", "b", "c"] | [.[] | index(ascii_upcase)]
+#+end_src
+
+#+RESULTS:

@@ -1,0 +1,45 @@
+#+TITLE: Day 9, Part 1
+
+#+begin_src jq :in-file d9test.txt :cmd-line -nR
+def neighbors:
+last as [$maxX, $maxY] | map(
+                             if first == 0 then [[first, last], [first+1, last]]
+                             elif first == $maxX then [[first, last], [first-1, last]]
+                             else [[first, last], [first-1, last], [first+1, last]]
+                                    end
+                             +
+                             if last == 0 then [[first, last+1]]
+                             elif last == $maxY then [[first, last-1]]
+                             else [[first, last-1], [first, last+1]]
+                                    end
+                           )
+;
+15 as $answer |
+[inputs | split("")] as $x | $x | transpose as $y | [range(0;$x | first | length)] as $i | [range(0;$y | first | length)] as $j | [$i, $j] | [combinations] | neighbors | map(map($y[first][last]) | select(first == (sort | first)) | first | tonumber | .+1) | add == $answer
+#+end_src
+
+#+RESULTS:
+: true
+
+
+#+begin_src jq :in-file d9input.txt :cmd-line -nR
+def neighbors:
+last as [$maxX, $maxY] | map(
+                             if first == 0 then [[first, last], [first+1, last]]
+                             elif first == $maxX then [[first, last], [first-1, last]]
+                             else [[first, last], [first-1, last], [first+1, last]]
+                                    end
+                             +
+                             if last == 0 then [[first, last+1]]
+                             elif last == $maxY then [[first, last-1]]
+                             else [[first, last-1], [first, last+1]]
+                                    end
+                           )
+;
+[inputs | split("")] as $x | $x | transpose as $y | [range(0;$x | first | length)] as $i | [range(0;$y | first | length)] as $j | [$i, $j] | [combinations] | neighbors | map(map($y[first][last]) | select(first == (sort | first)) | first | tonumber | .+1 |
+# had to remove 9s!
+    select(.!=10)) | add
+#+end_src
+
+#+RESULTS:
+: 516
