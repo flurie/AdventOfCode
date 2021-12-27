@@ -1,0 +1,215 @@
+* [[https://adventofcode.com/2021/day/13][Day 13 - Advent of Code 2021]] :website:
+
+[2021-12-21 Tue 22:48]
+
+** Article
+
+*** --- Day 13: Transparent Origami ---
+
+You reach another volcanically active part of the cave. It would be nice if you could do some kind of thermal imaging so you could tell ahead of time which caves are too hot to safely enter.
+
+Fortunately, the submarine seems to be equipped with a thermal camera! When you activate it, you are greeted with:
+
+#+begin_example
+   Congratulations on your purchase! To activate this infrared thermal imaging
+  camera system, please enter the code found on page 1 of the manual.
+#+end_example
+
+Apparently, the Elves have never used this feature. To your surprise, you manage to find the manual; as you go to open it, page 1 falls out. It's a large sheet of [[https://en.wikipedia.org/wiki/Transparency_(projection)][transparent paper]]! The transparent paper is marked with random dots and includes instructions on how to fold it up (your puzzle input). For example:
+
+#+begin_src text :tangle d13test.txt
+6,10
+0,14
+9,10
+0,3
+10,4
+4,11
+6,0
+6,12
+4,1
+0,13
+10,12
+3,4
+3,0
+8,4
+1,10
+2,14
+8,10
+9,0
+
+fold along y=7
+fold along x=5
+#+end_src
+
+#+begin_src jq :cmd-line -nRc :in-file d13test.txt
+
+# setup folds + dots
+[inputs/"\n" | .[] | ./","] | group_by(length) | [[(first[][] | capture("fold along (?<dir>[xy])=(?<num>[0-9]+)"))], (last | map(map(tonumber)))] as [$folds, $dots] | $dots
+# setup map (dot = true)
+  | transpose | (first | max + 1) as $xmax | (last | max + 1) as $ymax | [range($xmax) | [range($ymax) | false]] as $map | reduce $dots[] as $d ($map; setpath($d; true))
+
+#+end_src
+
+#+RESULTS:
+: [[false,false,false,true,false,false,false,false,false,false,false,false,false,true,true],[false,false,false,false,false,false,false,false,false,false,true,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,true],[true,false,false,false,true,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,false,false,false,false,false,true,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[true,false,false,false,false,false,false,false,false,false,true,false,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,true,false,false,false,false,false,true,false,false,false,false],[true,false,false,false,false,false,false,false,false,false,true,false,false,false,false],[false,false,false,false,true,false,false,false,false,false,false,false,true,false,false]]
+
+#+begin_src jq :cmd-line -nRc :in-file d13test.txt
+
+[inputs/"\n" | .[] | ./","] | group_by(length) | [([first[][] | split(" ") | last | split("=") | [first, (last | tonumber)]]), (last | map(map(tonumber)))] as [$folds, $dots] | $dots
+  | transpose | (first | max + 1) as $xmax | (last | max + 1) as $ymax | [range($xmax) | [range($ymax) | false]] as $map | reduce $dots[] as $d ($map; setpath($d; true))
+#+end_src
+
+#+RESULTS:
+: [[false,false,false,true,false,false,false,false,false,false,false,false,false,true,true],[false,false,false,false,false,false,false,false,false,false,true,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,true],[true,false,false,false,true,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,false,false,false,false,false,true,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[true,false,false,false,false,false,false,false,false,false,true,false,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,true,false,false,false,false,false,true,false,false,false,false],[true,false,false,false,false,false,false,false,false,false,true,false,false,false,false],[false,false,false,false,true,false,false,false,false,false,false,false,true,false,false]]
+
+#+begin_src jq :cmd-line -nRc :in-file d13test.txt
+[true, false, false] as $a | [false, true, false] as $b | [$a, $b] | [transpose[] | any ]
+#+end_src
+
+#+RESULTS:
+: [true,false,false]
+
+#+begin_src jq :cmd-line -nRc :in-file d13test.txt
+5 as $i | [range($i)] | [., [reverse[] + $i + 1]] | transpose
+
+#+end_src
+
+#+RESULTS:
+: [[0,10],[1,9],[2,8],[3,7],[4,6]]
+
+#+begin_src jq :cmd-line -nRc :in-file d13test.txt
+[[false,false,false,true,false,false,false,false,false,false,false,false,false,true,true],[false,false,false,false,false,false,false,false,false,false,true,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,true],[true,false,false,false,true,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,false,false,false,false,false,true,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[true,false,false,false,false,false,false,false,false,false,true,false,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,true,false,false,false,false,false,true,false,false,false,false],[true,false,false,false,false,false,false,false,false,false,true,false,false,false,false],[false,false,false,false,true,false,false,false,false,false,false,false,true,false,false]] | transpose as $data | [range(7)] | [., [reverse[] + 7 + 1]] | [transpose[] as [$i, $j] | [$data[$i]//empty, $data[$j]//empty] | transpose] #| map(any) ] | [flatten[] | select(. == true)] | length
+#+end_src
+
+#+RESULTS:
+: [[[false,true],[false,false],[false,true],[true,false],[false,false],[false,false],[true,false],[false,false],[false,false],[true,false],[false,false]],[[false,true],[false,false],[false,false],[false,false],[true,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false]],[[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,true],[false,false],[false,false],[false,false],[false,true]],[[true,false],[false,false],[false,false],[false,false],[false,true],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false]],[[false,false],[false,true],[false,false],[true,false],[false,false],[false,false],[false,true],[false,false],[true,true],[false,true],[true,false]],[[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false]],[[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false]]]
+
+
+The first section is a list of dots on the transparent paper. =0,0= represents the top-left coordinate. The first value, =x=, increases to the right. The second value, =y=, increases downward. So, the coordinate =3,0= is to the right of =0,0=, and the coordinate =0,7= is below =0,0=. The coordinates in this example form the following pattern, where =#= is a dot on the paper and =.= is an empty, unmarked position:
+
+#+begin_example
+   ...#..#..#.
+  ....#......
+  ...........
+  #..........
+  ...#....#.#
+  ...........
+  ...........
+  ...........
+  ...........
+  ...........
+  .#....#.##.
+  ....#......
+  ......#...#
+  #..........
+  #.#........
+#+end_example
+
+Then, there is a list of /fold instructions/. Each instruction indicates a line on the transparent paper and wants you to fold the paper /up/ (for horizontal =y=...= lines) or /left/ (for vertical =x=...= lines). In this example, the first fold instruction is =fold along y=7=, which designates the line formed by all of the positions where =y= is =7= (marked here with =-=):
+
+#+begin_example
+   ...#..#..#.
+  ....#......
+  ...........
+  #..........
+  ...#....#.#
+  ...........
+  ...........
+  -----------
+  ...........
+  ...........
+  .#....#.##.
+  ....#......
+  ......#...#
+  #..........
+  #.#........
+#+end_example
+
+Because this is a horizontal line, fold the bottom half /up/. Some of the dots might end up overlapping after the fold is complete, but dots will never appear exactly on a fold line. The result of doing this fold looks like this:
+
+#+begin_example
+   #.##..#..#.
+  #...#......
+  ......#...#
+  #...#......
+  .#.#..#.###
+  ...........
+  ...........
+#+end_example
+
+Now, only =17= dots are visible.
+
+Notice, for example, the two dots in the bottom left corner before the transparent paper is folded; after the fold is complete, those dots appear in the top left corner (at =0,0= and =0,1=). Because the paper is transparent, the dot just below them in the result (at =0,3=) remains visible, as it can be seen through the transparent paper.
+
+Also notice that some dots can end up /overlapping/; in this case, the dots merge together and become a single dot.
+
+The second fold instruction is =fold along x=5=, which indicates this line:
+
+#+begin_example
+   #.##.|#..#.
+  #...#|.....
+  .....|#...#
+  #...#|.....
+  .#.#.|#.###
+  .....|.....
+  .....|.....
+#+end_example
+
+Because this is a vertical line, fold /left/:
+
+#+begin_example
+   #####
+  #...#
+  #...#
+  #...#
+  #####
+  .....
+  .....
+#+end_example
+
+The instructions made a square!
+
+The transparent paper is pretty big, so for now, focus on just completing the first fold. After the first fold in the example above, = 17= dots are visible - dots that end up overlapping after the fold is completed count as a single dot.
+
+/How many dots are visible after completing just the first fold instruction on your transparent paper?/
+
+#+begin_src jq :cmd-line -nR :in-file d13input.txt
+
+def fold_paper($fold):
+  if $fold.dir == "y" then transpose else . end
+  |
+  . as $map |
+  [range($fold.num)] | [., [reverse[] + $fold.num + 1]] | [transpose[] as [$i, $j] | [$map[$i]//empty, $map[$j]//empty] | transpose | map(any)]
+  | if $fold.dir == "y" then transpose else . end
+;
+
+# setup folds + dots
+[inputs/"\n" | .[] | ./","] | group_by(length) | [[(first[][] | capture("fold along (?<dir>[xy])=(?<num>[0-9]+)") | .num |= tonumber)], (last | map(map(tonumber)))] as [$folds, $dots] | $dots
+# # setup map (dot = true)
+  | transpose | (first | max + 1) as $xmax | (last | max + 1) as $ymax | [range($xmax) | [range($ymax) | false]] as $map | reduce $dots[] as $d ($map; setpath($d; true)) | . as $data
+ | reduce $folds[] as $fold ($data; fold_paper($fold)) | map(map(if . then "#" else "." end)) | transpose | map(join(""))
+#+end_src
+
+#+RESULTS:
+: [
+:   "#..#.#....###..#..#.###...##..####.###..",
+:   "#..#.#....#..#.#..#.#..#.#..#.#....#..#.",
+:   "####.#....###..#..#.###..#....###..#..#.",
+:   "#..#.#....#..#.#..#.#..#.#.##.#....###..",
+:   "#..#.#....#..#.#..#.#..#.#..#.#....#.#..",
+:   "#..#.####.###...##..###...###.#....#..#."
+: ]
+
+For posterity:
+
+#+begin_example
+#+RESULTS:
+: [
+:   "#..#.#....###..#..#.###...##..####.###..",
+:   "#..#.#....#..#.#..#.#..#.#..#.#....#..#.",
+:   "####.#....###..#..#.###..#....###..#..#.",
+:   "#..#.#....#..#.#..#.#..#.#.##.#....###..",
+:   "#..#.#....#..#.#..#.#..#.#..#.#....#.#..",
+:   "#..#.####.###...##..###...###.#....#..#."
+: ]
+#+end_example
