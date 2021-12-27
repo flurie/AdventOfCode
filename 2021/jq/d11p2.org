@@ -1,0 +1,21 @@
+#+TITLE: Day 11, Part 2
+
+#+begin_src jq :cmd-line -nRc :in-file d11input.txt
+[inputs/"" | map(tonumber)]
+  | length as $ylen | (first | length) as $xlen | {grid: ., flashes: []}
+  |
+                                                     [while(.flashes | length != $xlen * $ylen;
+                .grid[][] += 1 | .flashes = [] | .next = [[]]
+                 | until( .next | length == 0;
+                      .next = ([.grid | paths(numbers > 9)] - .flashes)
+                      | [.next[]
+                          | [[range(3) - 1 + first], [range(3) - 1 + last]] | combinations
+                          | select(all(. >= 0) and first < $ylen and last < $xlen)] as $inc
+                       | .grid = reduce $inc[] as [$y, $x] (.grid; .[$y][$x] += 1)
+|                          .flashes += .next )
+                | .grid = reduce .flashes[] as [$y, $x] (.grid; .[$y][$x] = 0)
+              )] | length
+#+end_src
+
+#+RESULTS:
+: 418
