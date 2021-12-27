@@ -1,0 +1,261 @@
+#+TITLE: Day 14, Part 2
+
+~n = 20~ appears to be too much, so going to try memoizing this.
+
+#+begin_src jq :cmd-line -nR :in-file d14test.txt
+def sliding($size): . as $arr | reduce range(length - 1) as $i ([]; . + [$arr[$i:$i+$size]]) ;
+
+[inputs] | join(";")/";;" | map(split(";")) | [first[], reduce (last[] | split(" -> ")) as [$k, $v] ({}; . + {$k: $v})] as [$template, $rules]
+  | $template
+  | nth(10; recurse(
+     reduce [range((. | length) - 1) * 2][] as $i (
+       .; .[:$i+1] + $rules[.[$i:$i+2]] + .[$i+1:]
+     ))
+    ) #| split("") | [group_by(.)[] | length] | sort | last - first
+#+end_src
+
+First we need a sliding function.
+
+#+begin_src jq :cmd-line -nR :in-file d14test.txt
+def sliding($size): . as $arr | reduce range(length - 1) as $i ([]; . + [$arr[$i:$i+$size]]);
+
+
+[inputs] | join(";")/";;" | map(split(";")) | [first[], reduce (last[] | split(" -> ")) as [$k, $v] ({}; . + {$k: $v})] as [$template, $rules] | $template | sliding(2)
+
+#+end_src
+
+#+RESULTS:
+: [
+:   "NN",
+:   "NC",
+:   "CB"
+: ]
+
+Now we need to memoize ~n=10~ steps
+
+#+begin_src jq :cmd-line -nR :in-file d14test.txt
+def process($steps; $rules):
+    nth($steps; recurse(
+     reduce [range((. | length) - 1) * 2][] as $i (
+       .; .[:$i+1] + $rules[.[$i:$i+2]] + .[$i+1:]
+     ))
+    )
+;
+
+[inputs] | join(";")/";;" | map(split(";")) | [first[], reduce (last[] | split(" -> ")) as [$k, $v] ({}; . + {$k: $v})] as [$template, $rules] | $rules | keys | reduce .[] as $k ({}; . + {$k: $k | process(10; $rules) })
+# for brevity
+| .BB
+#+end_src
+
+#+RESULTS:
+: "BBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBBNBB"
+
+Now we can combine the two, and we have an n-step memoization in sliding window format.
+
+#+begin_src jq :cmd-line -nR :in-file d14test.txt
+def sliding($size): . as $arr | reduce range(length - 1) as $i ([]; . + [$arr[$i:$i+$size]]);
+
+def process($steps; $rules):
+    nth($steps; recurse(
+     reduce [range((. | length) - 1) * 2][] as $i (
+       .; .[:$i+1] + $rules[.[$i:$i+2]] + .[$i+1:]
+     ))
+    )
+;
+
+[inputs] | join(";")/";;" | map(split(";")) | [first[], reduce (last[] | split(" -> ")) as [$k, $v] ({}; . + {$k: $v})] as [$template, $rules] | $rules | keys | reduce .[] as $k ({}; . + {$k: $k | process(4; $rules) | sliding(2)})
+# for brevity
+| .BB
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[
+  "BB",
+  "BN",
+  "NB",
+  "BB",
+  "BN",
+  "NB",
+  "BB",
+  "BN",
+  "NB",
+  "BB",
+  "BN",
+  "NB",
+  "BB",
+  "BN",
+  "NB",
+  "BB"
+]
+#+end_example
+
+There are two interesting properties here. The first is that there are a lot of repeat couples. The second is that, with the sliding window, expansion is now completely independent of position, because each expansion involves only independent couples. We can use this information to turn this lookup into a dictionary of appearances. We're also going to initialize a new structure: a couple counter. Since couples are now position-independent, we can translate a "polymer" into a couple map based on the ~sliding(2)~ of the input.
+
+#+begin_src jq :cmd-line -nR :in-file d14test.txt
+def sliding($size): . as $arr | reduce range(length - 1) as $i ([]; . + [$arr[$i:$i+$size]]);
+
+def process($steps; $rules):
+    nth($steps; recurse(
+     reduce [range((. | length) - 1) * 2][] as $i (
+       .; .[:$i+1] + $rules[.[$i:$i+2]] + .[$i+1:]
+     ))
+    )
+;
+
+[inputs] | join(";")/";;" | map(split(";")) | [(first[] | sliding(2)), reduce (last[] | split(" -> ")) as [$k, $v] ({}; . + {$k: $v})] as [$template, $rules] | $rules | keys | reduce .[] as $k ({}; . + {$k: $k | process(1; $rules) | sliding(2) | [group_by(.)[] | {(first): length}] | add}) | . as $tenplate | .[] |= 0 | . as $count | reduce $template[] as $i ($count; .[$i] += 1) | {init: ., tenSteps: $tenplate}
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+{
+  "init": {
+    "BB": 0,
+    "BC": 0,
+    "BH": 0,
+    "BN": 0,
+    "CB": 1,
+    "CC": 0,
+    "CH": 0,
+    "CN": 0,
+    "HB": 0,
+    "HC": 0,
+    "HH": 0,
+    "HN": 0,
+    "NB": 0,
+    "NC": 1,
+    "NH": 0,
+    "NN": 1
+  },
+  "tenSteps": {
+    "BB": {
+      "BN": 1,
+      "NB": 1
+    },
+    "BC": {
+      "BB": 1,
+      "BC": 1
+    },
+    "BH": {
+      "BH": 1,
+      "HH": 1
+    },
+    "BN": {
+      "BB": 1,
+      "BN": 1
+    },
+    "CB": {
+      "CH": 1,
+      "HB": 1
+    },
+    "CC": {
+      "CN": 1,
+      "NC": 1
+    },
+    "CH": {
+      "BH": 1,
+      "CB": 1
+    },
+    "CN": {
+      "CC": 1,
+      "CN": 1
+    },
+    "HB": {
+      "CB": 1,
+      "HC": 1
+    },
+    "HC": {
+      "BC": 1,
+      "HB": 1
+    },
+    "HH": {
+      "HN": 1,
+      "NH": 1
+    },
+    "HN": {
+      "CN": 1,
+      "HC": 1
+    },
+    "NB": {
+      "BB": 1,
+      "NB": 1
+    },
+    "NC": {
+      "BC": 1,
+      "NB": 1
+    },
+    "NH": {
+      "CH": 1,
+      "NC": 1
+    },
+    "NN": {
+      "CN": 1,
+      "NC": 1
+    }
+  }
+}
+#+end_example
+
+Now we have our polymer as a map/count, and we have a way to lookup every 10 "steps". We just need to glue these two things together. I can generate these maps for every expansion, but I need to merge them by adding the values of matching keys. Need to experiment.
+
+#+begin_src jq :cmd-line -nR :in-file d14test.txt
+{a: 1, b: 2} as $o1 | {a: 3, b: 4} as $o2 | [$o1, $o2] | map(to_entries) | flatten | reduce .[] as $o ({}; .[$o.key] += $o.value)
+#+end_src
+
+#+RESULTS:
+: {
+:   "a": 4,
+:   "b": 6
+: }
+
+There's probably a better way to do this, but that's okay. Now I think we have the tools to solve the puzzle.
+
+#+begin_src jq :cmd-line -nR :in-file d14input.txt
+
+def merge: map(to_entries) | flatten | reduce .[] as $o ({}; .[$o.key] += $o.value);
+
+def sliding($size): . as $arr | reduce range(length - 1) as $i ([]; . + [$arr[$i:$i+$size]]);
+
+def process($steps; $rules):
+    nth($steps; recurse(
+     reduce [range((. | length) - 1) * 2][] as $i (
+       .; .[:$i+1] + $rules[.[$i:$i+2]] + .[$i+1:]
+     ))
+    )
+;
+
+[inputs] | join(";")/";;" | map(split(";"))
+  | [(first[] | sliding(2)), reduce (last[] | split(" -> ")) as [$k, $v] ({}; . + {$k: $v})] as [$template, $rules]
+  | $rules | keys | reduce .[] as $k ({}; . + {$k: $k | process(1; $rules) | sliding(2) | [group_by(.)[] | {(first): length}] | add}) | . as $ruleObj
+  | .[] |= 0 | . as $count
+  | reduce $template[] as $i ($count; .[$i] += 1)
+  | nth(40; recurse(
+   to_entries | map(.value as $v | $ruleObj[.key] | map_values(. * $v)) | merge
+             ))  | [to_entries[] | .key |= split("") | [.value as $v | .key[] as $k | {$k: $v}]] | flatten | merge | map_values(./2 | ceil) | [.[]] | sort | last - first
+#  | (keys | add | split("")) #|
+                                 #reduce unique[] as $l ({}; . + {$l: 0}) | . as $letters | $answer | [to_entries[] | .key |= split("")] | reduce .[] as $v ($letters; )
+#+end_src
+
+#+RESULTS:
+: 3420801168962
+
+#+begin_src jq :cmd-line -nR :in-file d14test.txt
+  {
+    "key": [
+      "C",
+      "B"
+    ],
+    "value": 1554005966
+  } as $i | $i | [.value as $v | .key[] as $k | {$k: $v}]
+#+end_src
+
+#+RESULTS:
+: [
+:   {
+:     "C": 1554005966
+:   },
+:   {
+:     "B": 1554005966
+:   }
+: ]
